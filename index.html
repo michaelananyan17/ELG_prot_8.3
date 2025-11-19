@@ -1,0 +1,2223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PELE - Personalized English Learning Experience (Functional)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f7f9fc;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            padding: 2rem 1rem;
+        }
+        .app-container {
+            background-color: #ffffff;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+            max-width: 4xl;
+            width: 100%;
+            border-radius: 1rem;
+            padding: 2rem 1.5rem;
+            position: relative; 
+        }
+
+        .card-topic, .card-format {
+            cursor: pointer;
+            transition: all 0.3s ease-in-out;
+            user-select: none;
+            border: 3px solid transparent;
+            background-color: #ffffff;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            position: relative; 
+        }
+        .card-topic:hover, .card-format:hover {
+            box-shadow: 0 5px 20px rgba(79, 70, 229, 0.2);
+        }
+        .card-topic.selected, .card-format.selected {
+            border-color: #4f46e5;
+            background-color: #eef2ff;
+            box-shadow: 0 5px 20px rgba(79, 70, 229, 0.3);
+        }
+        
+        .priority-number {
+            position: absolute;
+            top: -10px;
+            right: -10px;
+            width: 24px;
+            height: 24px;
+            background-color: #4f46e5;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: bold;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .slider-thumb::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #4f46e5;
+            cursor: pointer;
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
+            margin-top: -8px;
+        }
+        .slider-thumb::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #4f46e5;
+            cursor: pointer;
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
+        }
+
+        .counter-btn {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background-color: #e0e7ff;
+            color: #4f46e5;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            border: 1px solid #c7d2fe;
+        }
+        .counter-btn:hover {
+            background-color: #c7d2fe;
+        }
+        .counter-btn:disabled {
+            background-color: #f1f5f9;
+            color: #94a3b8;
+            cursor: not-allowed;
+            border-color: #e2e8f0;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #4f46e5;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .summary-block {
+            padding: 1.5rem; 
+            margin-bottom: 2rem; 
+            border-radius: 0.5rem; 
+            background-color: #f3f4f6;
+            border: 1px solid #d1d5db;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05); 
+        }
+
+        .assignment-block { 
+            border-left: 5px solid; 
+            padding: 1.5rem; 
+            margin-bottom: 2rem; 
+            border-radius: 0.5rem; 
+            background-color: #fff; 
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05); 
+        }
+        
+        .block-order-1 { border-color: #f59e0b; background-color: #fffbeb; }
+        .block-order-2 { border-color: #10b981; background-color: #ecfdf5; }
+        .block-order-3 { border-color: #4f46e5; background-color: #eef2ff; }
+        .block-order-4 { border-color: #84C3BE; background-color: #f0fafa; }
+
+        .input-style { 
+            width: 100%; 
+            padding: 0.75rem; 
+            border: 1px solid #d1d5db; 
+            border-radius: 0.5rem; 
+            resize: vertical; 
+            font-size: 1rem; 
+            transition: all 0.2s; 
+        }
+        .input-style:focus { 
+            border-color: #4f46e5; 
+            box-shadow: 0 0 0 3px #c7d2fe; 
+            outline: none; 
+        }
+        
+        .grammar-input {
+            border: 1px solid #ccc;
+            padding: 4px 6px;
+            border-radius: 4px;
+            text-align: center;
+            font-weight: 600;
+            color: #1e40af;
+            flex: 1 1 auto;
+            min-width: 100px;
+            max-width: 250px;
+        }
+
+        .random-button, .upload-button {
+            background-color: #5350fc;
+            border: 2px solid #4f46e5;
+            color: white;
+            font-weight: bold;
+            transition: all 0.2s ease-in-out;
+            box-shadow: 0 6px 15px rgba(79, 70, 229, 0.4); 
+        }
+        .random-button:hover, .upload-button:hover {
+            background-color: #4d27d6;
+            box-shadow: 0 8px 20px rgba(79, 70, 229, 0.5);
+            transform: translateY(-2px);
+        }
+        .random-button:active {
+            background-color: #3730a3;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            transform: translateY(0);
+        }
+
+        /* Updated styles for Step 2 layout */
+        .step-2-container {
+            display: flex;
+            height: 500px; /* Reduced height */
+            gap: 2rem;
+            margin-top: 1rem;
+        }
+        
+        .topics-section {
+            flex: 0 0 75%;
+            overflow-y: auto;
+            padding-right: 1rem;
+            position: relative;
+        }
+        
+        .category-section {
+            flex: 0 0 25%;
+            border-left: 1px solid #e5e7eb;
+            padding-left: 1rem;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+        
+        .category-scroll-container {
+            flex: 1;
+            overflow-y: auto;
+            margin-bottom: 1rem;
+            position: relative;
+        }
+        
+        .category-item {
+            padding: 0.75rem 1rem;
+            margin-bottom: 0.5rem;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: 500;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .category-highlighter {
+            position: absolute;
+            background-color: #4f46e5;
+            border-radius: 0.5rem;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 0;
+            box-shadow: 0 2px 4px rgba(79, 70, 229, 0.2);
+        }
+        
+        .category-item.active {
+            color: white;
+            font-weight: 600;
+        }
+        
+        .topic-category {
+            min-height: 100%;
+            padding: 2rem 0;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.6s ease, transform 0.6s ease;
+        }
+        
+        .topic-category.active {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        .topic-category h3 {
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+        }
+        
+        /* Updated topic grid with wider cards and no category labels */
+        .topic-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); /* Wider cards */
+            gap: 1rem;
+        }
+        
+        .card-topic {
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end; /* Move content to bottom */
+            align-items: center;
+            text-align: center;
+            padding: 1.5rem;
+            min-height: 120px;
+        }
+        
+        .card-topic h3 {
+            margin-top: auto; /* Push to bottom */
+            margin-bottom: 0.5rem;
+        }
+        
+        .step-2-footer {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 1.5rem;
+        }
+        
+        /* Navigation buttons for topics section */
+        .nav-button {
+            position: absolute;
+            background: rgba(83, 80, 252, 0.7); /* Semi-transparent */
+            border: none;
+            border-radius: 50%;
+            width: 36px; /* Smaller than Select button */
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 10;
+            transition: all 0.2s;
+        }
+        
+        .nav-button:hover {
+            background: rgba(83, 80, 252, 0.9);
+        }
+        
+        .nav-button.up {
+            top: 10px;
+            right: 20px;
+        }
+        
+        .nav-button.down {
+            bottom: 10px;
+            right: 20px;
+        }
+        
+        .nav-button svg {
+            width: 20px;
+            height: 20px;
+            color: white;
+        }
+        
+        .hidden {
+            display: none !important;
+        }
+    </style>
+</head>
+<body class="p-4 sm:p-8">
+    <div id="app-container" class="app-container">
+        <div id="header-section" class="mb-8">
+            <h1 class="text-3xl font-extrabold text-gray-900 mb-2 text-center">PELE Assignment Generator</h1>
+            <p class="text-gray-500 text-center">Powered by OpenAI</p>
+        </div>
+
+        <div class="mb-8">
+            <div class="relative pt-1">
+                <div class="flex mb-2 items-center justify-between">
+                    <div class="text-right">
+                        <span id="progress-text" class="text-xs font-semibold inline-block py-1 px-2 uppercase rounded-full text-indigo-600 bg-indigo-200">
+                            Step 1: Get Started
+                        </span>
+                    </div>
+                </div>
+                <div class="overflow-hidden h-2 mb-4 text-xs flex rounded bg-indigo-200">
+                    <div id="progress-bar" style="width: 25%" class="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-indigo-600 transition-all duration-500"></div>
+                </div>
+            </div>
+        </div>
+
+        <div id="step-1" class="step-content">
+            <h2 class="text-2xl font-bold text-gray-800 mb-6">Welcome! Let's Get Set Up.</h2>
+            <div class="p-6 bg-yellow-50 border-l-4 border-yellow-400 rounded-lg mb-6">
+                <h3 class="font-bold text-yellow-800 mb-2">Important: OpenAI API Key Required</h3>
+                <p class="text-sm text-yellow-700">To generate *real* assignments, you need an API key for the OpenAI model. Paste your key below.</p>
+            </div>
+
+            <div class="mb-6">
+                <label for="openai-api-key" class="block text-sm font-medium text-gray-700 mb-2">OpenAI API Key</label>
+                <input type="text" id="openai-api-key" placeholder="Paste your API key here (starts with 'sk-...')" 
+                       class="w-full p-3 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 transition duration-150 ease-in-out">
+            </div>
+
+            <div class="mt-8 flex justify-end">
+                <button id="step-1-next" class="px-6 py-3 bg-indigo-600 text-white font-semibold rounded-lg shadow-md hover:bg-indigo-700 transition duration-150 ease-in-out disabled:opacity-50" disabled>
+                    Next: Topic Selection →
+                </button>
+            </div>
+        </div>
+
+        <div id="step-2" class="step-content hidden">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold text-gray-800">Step 2: Choose Your Topic</h2>
+                <div class="flex items-center space-x-3">
+                    <input type="file" id="upload-topic-input" accept=".txt,.pdf" class="hidden">
+                    <button id="upload-topic-btn" class="upload-button flex flex-col items-center justify-between px-4 py-1 rounded-lg text-white font-semibold flex-shrink-0" style="width: 130px; height: 50px;">
+                        <div class="flex-1 flex items-center justify-center" style="padding-bottom: 4px;">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                            </svg>
+                        </div>
+                        <span class="text-xs" style="white-space: nowrap;">Upload Topic</span>
+                    </button>
+                    <button id="select-random-topic-btn" class="random-button flex flex-col items-center justify-center px-4 py-1 rounded-lg text-white font-semibold flex-shrink-0" style="width: 130px; height: 50px;">
+                        <span class="text-xl leading-none">🎲</span>
+                        <span class="text-xs mt-1">Random Topic</span>
+                    </button>
+                </div>
+            </div>
+
+            <p class="text-gray-600 mb-4">Select **1 or 2 topics**. The order of selection determines the priority for content generation.</p>
+
+            <div class="p-4 border border-gray-200 rounded-lg bg-gray-50 mb-4">
+                <div class="flex space-x-2 items-center">
+                    <input type="text" id="custom-topic-text" placeholder="Search a custom topic or keyword..." 
+                           class="flex-grow p-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 transition duration-150 ease-in-out">
+                    <button id="select-custom-topic-btn" class="px-4 py-2 bg-indigo-600 text-white font-semibold rounded-lg shadow-md hover:bg-indigo-700 transition duration-150 ease-in-out disabled:opacity-50" disabled>
+                        Select
+                    </button>
+                </div>
+            </div>
+            <p id="selected-topics-indicator" class="text-sm font-medium text-gray-700 mb-6">Selected Topics (Priority Order): None</p>
+
+            <!-- UPDATED LAYOUT FOR STEP 2 -->
+            <div class="step-2-container">
+                <!-- Topics Section (75%) -->
+                <div class="topics-section" id="topics-scroll-container">
+                    <!-- Navigation buttons -->
+                    <button id="nav-up" class="nav-button up hidden">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7" />
+                        </svg>
+                    </button>
+                    <button id="nav-down" class="nav-button down hidden">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                        </svg>
+                    </button>
+                    
+                    <!-- Categories will be populated by JavaScript -->
+                </div>
+                
+                <!-- Category Section (25%) -->
+                <div class="category-section">
+                    <div class="category-highlighter" id="category-highlighter"></div>
+                    <div class="category-scroll-container" id="category-list">
+                        <!-- Categories will be populated by JavaScript -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- UPDATED: Step 2 footer with both buttons -->
+            <div class="step-2-footer">
+                <button id="step-2-back" class="px-6 py-3 text-gray-600 border border-gray-400 rounded-lg font-semibold hover:bg-gray-100 transition duration-150 ease-in-out">
+                    ← Back to API Setup
+                </button>
+                <button id="step-2-next" class="px-6 py-3 bg-indigo-600 text-white font-semibold rounded-lg shadow-md hover:bg-indigo-700 transition duration-150 ease-in-out disabled:opacity-50 flex items-center justify-center space-x-2">
+                    <span>Next: Assignment Type</span>
+                    <span id="step-2-next-icon" class="font-bold">→</span>
+                </button>
+            </div>
+        </div>
+
+        <div id="step-3" class="step-content hidden">
+            <h2 class="text-2xl font-bold text-gray-800 mb-6">Step 3: Format & Difficulty</h2>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <div>
+                    <h3 class="text-xl font-semibold text-gray-700 mb-4">Assignment Format</h3>
+                    <div id="format-cards" class="grid grid-cols-2 gap-4">
+                        </div>
+                </div>
+
+                <div>
+                    <h3 class="text-xl font-semibold text-gray-700 mb-4">Difficulty Level (CEFR)</h3>
+                    
+                    <div class="p-6 bg-indigo-50 rounded-lg shadow-inner">
+                        <div class="flex justify-between text-sm font-medium text-indigo-700 mb-4">
+                            <span id="cefr-display" class="text-2xl font-bold">A1</span>
+                            <span id="level-description-short" class="mt-1">Beginner</span>
+                        </div>
+                        <input type="range" min="1" max="6" value="3" id="cefr-slider" 
+                               class="w-full h-2 bg-indigo-300 rounded-lg appearance-none cursor-pointer slider-thumb">
+                        <div class="flex justify-between text-xs mt-2 text-indigo-700 font-medium">
+                            <span>A1</span>
+                            <span>A2</span>
+                            <span>B1</span>
+                            <span>B2</span>
+                            <span>C1</span>
+                            <span>C2</span>
+                        </div>
+                    </div>
+
+                    <div class="mt-6">
+                        <div id="description-toggle-header" class="flex items-center justify-between cursor-pointer p-3 rounded-lg bg-gray-100 hover:bg-gray-200 transition">
+                            <span class="font-medium text-gray-700">What does this level mean?</span>
+                            <span id="toggle-icon" class="text-gray-500 transform transition-transform duration-300">▼</span>
+                        </div>
+                        <div id="level-description-full" class="p-4 bg-white border border-t-0 rounded-b-lg text-sm text-gray-600 hidden">
+                            </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex justify-between mt-8">
+                <button id="step-3-back" class="px-6 py-3 text-indigo-600 border border-indigo-600 rounded-lg font-semibold hover:bg-indigo-50 transition duration-150 ease-in-out">
+                    Back (Step 2)
+                </button>
+                <button id="step-3-next-generate" class="px-8 py-3 bg-green-600 text-white font-bold rounded-lg shadow-xl hover:bg-green-700 transition duration-150 ease-in-out disabled:opacity-50" disabled>
+                    Generate Assignments
+                </button>
+            </div>
+        </div>
+
+        <div id="step-4" class="step-content hidden">
+            
+            <header class="text-center mb-10">
+                <h1 class="text-3xl font-extrabold text-gray-900 tracking-tight">Personalized English Learning</h1>
+                <p id="step-title" class="text-xl font-medium text-indigo-600 mt-2">My Personal Assignment</p>
+                <p class="text-gray-500 mt-1">Topic(s): <span id="final-topic-display" class="font-semibold text-gray-700"></span> | Level: <span id="final-level-display" class="font-semibold text-gray-700"></span></p>
+            </header>
+            
+            <div id="generation-loading" class="text-center p-12 border border-dashed border-gray-300 rounded-lg hidden">
+                <div class="spinner mx-auto mb-4"></div>
+                <p class="text-gray-600 font-semibold text-lg">
+                    Generating your personalized English assignments using the LLM...
+                </p>
+                <p class="text-sm text-gray-500 mt-2">This may take up to 60 seconds, as we are generating topic summaries and assignments.</p>
+            </div>
+
+            <div id="generation-error" class="bg-red-50 border-l-4 border-red-400 text-red-700 p-4 rounded hidden" role="alert">
+                <p class="font-bold">Generation Failed</p>
+                <p id="error-message" class="text-sm">An unknown error occurred while contacting the LLM.</p>
+            </div>
+
+            <div id="assignments-workspace">
+                </div>
+
+            <div id="grading-summary" class="hidden mt-8 p-6 bg-indigo-50 rounded-lg border border-indigo-200 shadow-md">
+                <h3 class="text-xl font-bold text-indigo-800">Review Summary</h3>
+                <p class="text-lg text-indigo-600 mt-1">Score on Graded Questions: <span id="current-score" class="font-extrabold text-2xl">0/0</span></p>
+                <p id="grading-message" class="text-sm text-indigo-700"></p>
+            </div>
+
+            <div class="flex justify-between mt-8">
+                <div class="space-x-4">
+                    <button id="step-4-back-to-prev" class="px-6 py-3 text-indigo-600 border border-indigo-600 rounded-lg font-semibold hover:bg-indigo-50 transition duration-150 ease-in-out">
+                        Change Criteria
+                    </button>
+                </div>
+                <button id="submit-assignments" class="px-6 py-3 bg-indigo-600 text-white font-semibold rounded-lg shadow-md hover:bg-indigo-700 transition duration-150 ease-in-out disabled:opacity-50" disabled>
+                    Grade & Review (Step 5)
+                </button>
+            </div>
+        </div>
+
+        <div id="step-5" class="step-content hidden">
+            <h2 class="text-2xl font-bold text-gray-800 mb-6">Step 5: Final Review & Export</h2>
+            
+            <div class="p-6 bg-green-50 border-l-4 border-green-400 text-green-700 rounded-lg mb-6">
+                <p class="font-bold">Success!</p>
+                <p class="text-sm">Your real, custom-generated assignments are ready for use. You can now copy or export them.</p>
+            </div>
+
+            <div id="final-review-content" class="p-6 border border-gray-200 rounded-lg bg-white shadow-sm space-y-4">
+                <h3 class="text-xl font-semibold text-gray-700">Assignments Summary</h3>
+                <div id="final-assignment-text" class="whitespace-pre-wrap text-gray-700 text-sm">
+                    </div>
+                <button onclick="copyToClipboard('final-assignment-text')" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg text-sm hover:bg-gray-300 transition duration-150 ease-in-out mt-4">
+                    Copy All Assignments
+                </button>
+            </div>
+
+            <div class="flex justify-between mt-8">
+                <button id="step-5-back-to-prev" class="px-6 py-3 text-indigo-600 border border-indigo-600 rounded-lg font-semibold hover:bg-indigo-50 transition duration-150 ease-in-out">
+                    Back (Step 4)
+                </button>
+                <button id="step-5-back-to-start" class="px-6 py-3 bg-gray-800 text-white font-semibold rounded-lg shadow-md hover:bg-gray-700 transition duration-150 ease-in-out">
+                    Finish & Restart
+                </button>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // =====================================================================================================
+        // GLOBAL CONFIGURATION & STATE
+        // =====================================================================================================
+
+        let API_KEY = '';
+        
+        const OPENAI_MODEL = 'gpt-3.5-turbo-1106';
+        const OPENAI_URL = 'https://api.openai.com/v1/chat/completions';
+
+        const appState = {
+            currentStep: 1,
+            selectedTopicIds: [],
+            selectedFormats: [],
+            cefrLevel: 'B1',
+            generatedSummaries: [],
+            generatedAssignments: [],
+            userAnswers: [],
+            customTopicText: '',
+            uploadedTopic: null,
+            currentCategory: 'Current Events',
+            isScrolling: false,
+            scrollTimeout: null
+        };
+
+        // ==========================================================================================
+        // UPDATED TOPIC_POOL_DATA WITH REQUESTED CATEGORY ORDER
+        // ==========================================================================================
+        const CATEGORIES = [
+            'Current Events',
+            'Economy & Business',
+            'Science & Technology',
+            'World History',
+            'Media & Entertainment',
+            'Style & Fashion',
+            'Art & Theatre',
+            'English Literature',
+            'Geography & Nature',
+            'Cats & Dogs'
+        ];
+
+        const TOPIC_POOL_DATA = [
+            // Current Events
+            { id: 1, name: 'Global Politics', icon: '🌐', category: 'Current Events' },
+            { id: 2, name: 'Environmental News', icon: '🌍', category: 'Current Events' },
+            { id: 3, name: 'Technology Trends', icon: '📱', category: 'Current Events' },
+            { id: 4, name: 'Social Movements', icon: '✊', category: 'Current Events' },
+            { id: 5, name: 'Economic Updates', icon: '💹', category: 'Current Events' },
+
+            // Economy & Business
+            { id: 6, name: 'Marketing 101', icon: '📈', category: 'Economy & Business' },
+            { id: 7, name: 'Start-up Culture', icon: '💡', category: 'Economy & Business' },
+            { id: 8, name: 'Corporate Ethics', icon: '🤝', category: 'Economy & Business' },
+            { id: 9, name: 'Supply and Demand', icon: '📉', category: 'Economy & Business' },
+            { id: 10, name: 'Global Trade', icon: '🌐', category: 'Economy & Business' },
+            { id: 11, name: 'Cryptocurrency', icon: '₿', category: 'Economy & Business' },
+            { id: 12, name: 'Digital Marketing', icon: '📊', category: 'Economy & Business' },
+            { id: 13, name: 'Corporate Business Solutions', icon: '💼', category: 'Economy & Business' },
+
+            // Science & Technology
+            { id: 14, name: 'AI & ML', icon: '🤖', category: 'Science & Technology' },
+            { id: 15, name: 'Quantum Physics', icon: '⚛️', category: 'Science & Technology' },
+            { id: 16, name: 'Biotechnology', icon: '🧬', category: 'Science & Technology' },
+            { id: 17, name: 'Cybersecurity', icon: '🔒', category: 'Science & Technology' },
+            { id: 18, name: 'Renewable Energy', icon: '💡', category: 'Science & Technology' },
+            { id: 19, name: 'Space Exploration', icon: '🚀', category: 'Science & Technology' },
+            { id: 20, name: 'Mental Wellness', icon: '🧘', category: 'Science & Technology' },
+            { id: 21, name: 'Exercise Science', icon: '🏃', category: 'Science & Technology' },
+
+            // World History
+            { id: 22, name: 'The Roman Empire', icon: '🏛️', category: 'World History' },
+            { id: 23, name: 'Ancient Egypt', icon: '☥', category: 'World History' },
+            { id: 24, name: 'World Wars', icon: '⚔️', category: 'World History' },
+            { id: 25, name: 'Economic History', icon: '💰', category: 'World History' },
+            { id: 26, name: 'Philosophy', icon: '🧠', category: 'World History' },
+            { id: 27, name: 'Stoicism', icon: '🗿', category: 'World History' },
+            { id: 28, name: 'Existentialism', icon: '🤔', category: 'World History' },
+            { id: 29, name: 'Ethical Dilemmas', icon: '⚖️', category: 'World History' },
+
+            // Media & Entertainment
+            { id: 30, name: 'Music Theory', icon: '🎵', category: 'Media & Entertainment' },
+            { id: 31, name: 'History of Jazz', icon: '🎷', category: 'Media & Entertainment' },
+            { id: 32, name: 'Modern Pop Culture', icon: '🎤', category: 'Media & Entertainment' },
+            { id: 33, name: 'Film Noir', icon: '🎬', category: 'Media & Entertainment' },
+            { id: 34, name: 'Special Effects (CGI)', icon: '💥', category: 'Media & Entertainment' },
+            { id: 35, name: 'Screenwriting', icon: '✍️', category: 'Media & Entertainment' },
+            { id: 36, name: 'Cinema Classics', icon: '🎥', category: 'Media & Entertainment' },
+            { id: 37, name: 'Video Game Industry', icon: '🎮', category: 'Media & Entertainment' },
+            { id: 38, name: 'Social Media Trends', icon: '📱', category: 'Media & Entertainment' },
+            { id: 39, name: 'Reality Television', icon: '📺', category: 'Media & Entertainment' },
+
+            // Style & Fashion
+            { id: 40, name: 'Sustainable Fashion', icon: '♻️', category: 'Style & Fashion' },
+            { id: 41, name: 'Fashion History', icon: '👗', category: 'Style & Fashion' },
+            { id: 42, name: 'Haute Couture', icon: '👠', category: 'Style & Fashion' },
+            { id: 43, name: 'Street Style', icon: '👕', category: 'Style & Fashion' },
+            { id: 44, name: 'Fashion Design', icon: '📐', category: 'Style & Fashion' },
+
+            // Art & Theatre
+            { id: 45, name: 'Renaissance Art', icon: '🎨', category: 'Art & Theatre' },
+            { id: 46, name: 'Modern Theatre', icon: '🎭', category: 'Art & Theatre' },
+            { id: 47, name: 'Sculpture', icon: '🗿', category: 'Art & Theatre' },
+            { id: 48, name: 'Performance Art', icon: '💃', category: 'Art & Theatre' },
+            { id: 49, name: 'Art History', icon: '📜', category: 'Art & Theatre' },
+
+            // English Literature
+            { id: 50, name: 'Shakespeare', icon: '🎭', category: 'English Literature' },
+            { id: 51, name: 'Poetry Analysis', icon: '📜', category: 'English Literature' },
+            { id: 52, name: 'Modern Novels', icon: '📖', category: 'English Literature' },
+            { id: 53, name: 'Literary Criticism', icon: '✍️', category: 'English Literature' },
+            { id: 54, name: 'Classic Literature', icon: '🏛️', category: 'English Literature' },
+
+            // Geography & Nature
+            { id: 55, name: 'Climate Change', icon: '🌍', category: 'Geography & Nature' },
+            { id: 56, name: 'Volcanoes', icon: '🌋', category: 'Geography & Nature' },
+            { id: 57, name: 'Major River Systems', icon: '🏞️', category: 'Geography & Nature' },
+            { id: 58, name: 'Urban Planning', icon: '🏙️', category: 'Geography & Nature' },
+            { id: 59, name: 'Natural Resources', icon: '🌿', category: 'Geography & Nature' },
+            { id: 60, name: 'Capital Cities', icon: '🗺️', category: 'Geography & Nature' },
+            { id: 61, name: 'Nutrition & Diet', icon: '🍎', category: 'Geography & Nature' },
+
+            // Cats & Dogs
+            { id: 62, name: 'Cat Behavior', icon: '🐱', category: 'Cats & Dogs' },
+            { id: 63, name: 'Dog Training', icon: '🐶', category: 'Cats & Dogs' },
+            { id: 64, name: 'Pet Nutrition', icon: '🥩', category: 'Cats & Dogs' },
+            { id: 65, name: 'Animal Welfare', icon: '❤️', category: 'Cats & Dogs' },
+            { id: 66, name: 'Veterinary Science', icon: '🐾', category: 'Cats & Dogs' }
+        ];
+        
+        let TOPIC_POOL = [...TOPIC_POOL_DATA];
+        
+        const FORMAT_POOL = [
+            { id: 'ft1', name: 'English Text Topic', type: 'WritingPrompt', icon: '📝', description: 'Generates a full prompt for an essay or a short story (Ungraded)' },
+            { id: 'ft2', name: 'Grammar Practice', type: 'GrammarPractice', icon: '🧠', description: 'Generates sentences with blanks for conjunction or syntax practice' },
+            { id: 'ft3', name: 'Vocabulary Words', type: 'VocabularyWords', icon: '📚', description: 'Generates new words with context, requiring students to use them in sentences (Ungraded)' },
+            { id: 'ft4', name: 'Multiple Choice', type: 'MultipleChoice', icon: '✅', description: 'GenerATES questions with four potential answers, with only one correct answer' },
+        ];
+
+        const CEFR_LEVELS = {
+            'A1': { short: 'Beginner', full: 'Can understand and use familiar everyday expressions and very basic phrases.' },
+            'A2': { short: 'Elementary', full: 'Can understand sentences and frequently used expressions related to areas of most immediate relevance.' },
+            'B1': { short: 'Intermediate', full: 'Can understand the main points of clear standard input on familiar matters regularly encountered in work, school, leisure, etc.' },
+            'B2': { short: 'Upper Intermediate', full: 'Can understand the main ideas of complex text on both concrete and abstract topics, including technical discussions in their field of specialization.' },
+            'C1': { short: 'Advanced', full: 'Can understand a wide range of demanding, longer texts, and recognize implicit meaning. Can express him/herself fluently and spontaneously.' },
+            'C2': { short: 'Proficiency', full: 'Can understand with ease virtually everything heard or read. Can summarize information from different spoken and written sources.' }
+        };
+
+        // =====================================================================================================
+        // UTILITY FUNCTIONS
+        // =====================================================================================================
+
+        function getElement(id) {
+            return document.getElementById(id);
+        }
+
+        function formatTypeToName(type) {
+            const format = FORMAT_POOL.find(f => f.type === type);
+            return format ? format.name : type;
+        }
+
+        function showStep(stepNumber) {
+            appState.currentStep = stepNumber;
+            document.querySelectorAll('.step-content').forEach(el => el.classList.add('hidden'));
+            getElement(`step-${stepNumber}`).classList.remove('hidden');
+            updateProgressBar(stepNumber);
+            updateButtonStates();
+            
+            // Initialize scroll-based category navigation when Step 2 is shown
+            if (stepNumber === 2) {
+                setTimeout(() => {
+                    initializeCategorySystem();
+                }, 100);
+            }
+        }
+
+        function updateProgressBar(step) {
+            const percentage = step * 25;
+            getElement('progress-bar').style.width = `${percentage}%`;
+            
+            let text = `Step ${step}: `;
+            if (step === 1) text += "Get Started";
+            if (step === 2) text += "Choose Topic";
+            if (step === 3) text += "Format & Difficulty";
+            if (step === 4) text += "Review Assignments";
+            if (step === 5) text += "Final Export";
+
+            getElement('progress-text').textContent = text;
+        }
+        
+        function updateButtonStates() {
+            const apiKeyInput = getElement('openai-api-key').value.trim();
+            API_KEY = apiKeyInput;
+            getElement('step-1-next').disabled = !apiKeyInput;
+
+            const hasTopic = appState.selectedTopicIds.length > 0;
+            const step2NextBtn = getElement('step-2-next');
+            step2NextBtn.disabled = !hasTopic;
+            
+            const customTopicInput = getElement('custom-topic-text').value.trim();
+            getElement('select-custom-topic-btn').disabled = !customTopicInput;
+
+            updateTopicSelectionVisuals();
+
+            const hasFormat = appState.selectedFormats.length > 0;
+            getElement('step-3-next-generate').disabled = !hasFormat;
+
+            getElement('submit-assignments').disabled = appState.generatedAssignments.length === 0;
+        }
+
+        function toggleSelection(id, type) {
+            if (type !== 'topic') {
+                console.error("Wrong function call. Use toggleFormatSelection for formats.");
+                return;
+            }
+
+            const stateArray = appState.selectedTopicIds;
+            const cardElement = getElement(`topic-${id}`);
+            const index = stateArray.indexOf(id);
+
+            if (index > -1) {
+                stateArray.splice(index, 1);
+                cardElement.classList.remove('selected');
+                const priorityNum = cardElement.querySelector('.priority-number');
+                if (priorityNum) priorityNum.remove();
+
+                if (typeof id === 'string') {
+                    TOPIC_POOL = TOPIC_POOL.filter(t => t.id !== id);
+                    if (id === 'uploaded') appState.uploadedTopic = null;
+                    renderCards();
+                }
+
+            } else {
+                if (stateArray.length >= 2) {
+                    return; 
+                }
+                
+                stateArray.push(id);
+                cardElement.classList.add('selected');
+            }
+
+            updateButtonStates();
+            renderPriorityNumbers();
+        }
+
+        function toggleFormatSelection(id) {
+            const index = appState.selectedFormats.findIndex(sf => sf.id === id);
+
+            if (index > -1) {
+                appState.selectedFormats.splice(index, 1);
+            } else {
+                appState.selectedFormats.push({ id: id, count: 1 });
+            }
+            
+            renderCards();
+            updateButtonStates();
+        }
+
+        function updateFormatCount(id, change) {
+            const format = appState.selectedFormats.find(sf => sf.id === id);
+            if (format) {
+                const newCount = format.count + change;
+                if (newCount >= 1 && newCount <= 3) { 
+                    format.count = newCount;
+                }
+                
+                getElement(`count-${id}`).textContent = format.count;
+                getElement(`btn-minus-${id}`).disabled = format.count <= 1;
+                getElement(`btn-plus-${id}`).disabled = format.count >= 3;
+            }
+        }
+
+        function handleStep2Next() {
+            showStep(3);
+        }
+
+        function updateTopicSelectionVisuals() {
+            const topicNames = appState.selectedTopicIds.map(id => {
+                const topic = TOPIC_POOL.find(t => t.id === id);
+                return topic ? topic.name : '';
+            }).filter(Boolean);
+
+            const indicatorText = topicNames.length > 0 
+                ? topicNames.map((name, index) => `#${index + 1} **${name}**`).join(' | ')
+                : 'None';
+
+            getElement('selected-topics-indicator').innerHTML = `Selected Topics (Priority Order): ${indicatorText}`;
+            renderPriorityNumbers();
+        }
+
+        function renderPriorityNumbers() {
+            document.querySelectorAll('.card-topic .priority-number').forEach(el => el.remove());
+
+            appState.selectedTopicIds.forEach((id, index) => {
+                const cardElement = getElement(`topic-${id}`);
+                if (cardElement) {
+                    const priorityNum = document.createElement('div');
+                    priorityNum.className = 'priority-number';
+                    priorityNum.textContent = index + 1;
+                    cardElement.appendChild(priorityNum);
+                }
+            });
+        }
+
+        function updateLevel(value) {
+            const levels = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'];
+            const level = levels[value - 1];
+            appState.cefrLevel = level;
+
+            const cefrDisplay = getElement('cefr-display');
+            const levelDescShort = getElement('level-description-short');
+            const levelDescFull = getElement('level-description-full');
+            
+            cefrDisplay.textContent = level;
+            levelDescShort.textContent = CEFR_LEVELS[level].short;
+            levelDescFull.textContent = CEFR_LEVELS[level].full;
+        }
+
+        function toggleDescription() {
+            const desc = getElement('level-description-full');
+            const icon = getElement('toggle-icon');
+            const isHidden = desc.classList.contains('hidden');
+            
+            desc.classList.toggle('hidden', !isHidden);
+            icon.style.transform = isHidden ? 'rotate(180deg)' : 'rotate(0deg)';
+        }
+
+        // NEW: Function to update navigation buttons based on current category
+        function updateNavigationButtons() {
+            const navUp = getElement('nav-up');
+            const navDown = getElement('nav-down');
+            
+            // Show/hide up button - not needed for first category
+            if (appState.currentCategory === CATEGORIES[0]) {
+                navUp.classList.add('hidden');
+            } else {
+                navUp.classList.remove('hidden');
+            }
+            
+            // Show/hide down button - not needed for last category
+            if (appState.currentCategory === CATEGORIES[CATEGORIES.length - 1]) {
+                navDown.classList.add('hidden');
+            } else {
+                navDown.classList.remove('hidden');
+            }
+        }
+
+        // NEW: Function to navigate to next/previous category
+        function navigateCategory(direction) {
+            const currentIndex = CATEGORIES.indexOf(appState.currentCategory);
+            let newIndex;
+            
+            if (direction === 'up' && currentIndex > 0) {
+                newIndex = currentIndex - 1;
+            } else if (direction === 'down' && currentIndex < CATEGORIES.length - 1) {
+                newIndex = currentIndex + 1;
+            } else {
+                return; // Invalid navigation
+            }
+            
+            scrollToCategory(CATEGORIES[newIndex]);
+        }
+
+        // =====================================================================================================
+        // IMPROVED CATEGORY-TRACKING SYSTEM FROM step_2_sync_prot.html
+        // =====================================================================================================
+
+        let intersectionObserver = null;
+
+        // FIXED: Initialize the category tracking system
+        function initializeCategorySystem() {
+            renderCategorySidebar();
+            renderTopicCategories();
+            initializeScrollTracking();
+            setActiveCategory('Current Events', true);
+            updateNavigationButtons();
+        }
+
+        // FIXED: Render category sidebar with proper click handlers
+        function renderCategorySidebar() {
+            const categoryContainer = getElement('category-list');
+            if (!categoryContainer) return;
+
+            categoryContainer.innerHTML = CATEGORIES.map(category => {
+                const isActive = category === appState.currentCategory;
+                return `
+                    <div class="category-item ${isActive ? 'active' : ''}" 
+                         data-category="${category}"
+                         onclick="handleCategoryClick('${category}')">
+                        ${category}
+                    </div>
+                `;
+            }).join('');
+
+            // Update highlighter position after rendering
+            setTimeout(updateCategoryHighlighter, 100);
+        }
+
+        // FIXED: Handle category clicks
+        function handleCategoryClick(category) {
+            appState.isScrolling = true;
+            scrollToCategory(category);
+            
+            // Reset the scrolling flag after a delay
+            setTimeout(() => {
+                appState.isScrolling = false;
+            }, 1000);
+        }
+
+        // FIXED: Scroll to specific category
+        function scrollToCategory(category) {
+            const categoryElement = getElement(`category-${category.replace(/\s+/g, '-')}`);
+            if (categoryElement) {
+                const topicsContainer = getElement('topics-scroll-container');
+                const containerRect = topicsContainer.getBoundingClientRect();
+                const elementRect = categoryElement.getBoundingClientRect();
+                
+                // Calculate scroll position to center the category
+                const scrollTop = categoryElement.offsetTop - (containerRect.height / 2) + (elementRect.height / 2);
+                
+                topicsContainer.scrollTo({
+                    top: scrollTop,
+                    behavior: 'smooth'
+                });
+                
+                setActiveCategory(category, false);
+            }
+        }
+
+        // FIXED: Set active category and update UI
+        function setActiveCategory(category, updateScroll = false) {
+            if (appState.currentCategory === category) return;
+            
+            appState.currentCategory = category;
+            
+            // Update category items
+            document.querySelectorAll('.category-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            
+            const activeCategoryItem = document.querySelector(`[data-category="${category}"]`);
+            if (activeCategoryItem) {
+                activeCategoryItem.classList.add('active');
+            }
+            
+            // Update topic sections
+            document.querySelectorAll('.topic-category').forEach(section => {
+                section.classList.remove('active');
+            });
+            
+            const activeSection = getElement(`category-${category.replace(/\s+/g, '-')}`);
+            if (activeSection) {
+                activeSection.classList.add('active');
+            }
+            
+            // Update highlighter
+            updateCategoryHighlighter();
+            
+            // Update navigation buttons
+            updateNavigationButtons();
+            
+            // Scroll to category if requested
+            if (updateScroll) {
+                scrollToCategory(category);
+            }
+        }
+
+        // FIXED: Update category highlighter position
+        function updateCategoryHighlighter() {
+            const highlighter = getElement('category-highlighter');
+            const activeCategoryItem = document.querySelector('.category-item.active');
+            
+            if (highlighter && activeCategoryItem) {
+                const itemRect = activeCategoryItem.getBoundingClientRect();
+                const containerRect = activeCategoryItem.parentElement.getBoundingClientRect();
+                
+                highlighter.style.width = `${itemRect.width}px`;
+                highlighter.style.height = `${itemRect.height}px`;
+                highlighter.style.top = `${itemRect.top - containerRect.top}px`;
+                highlighter.style.left = `${itemRect.left - containerRect.left}px`;
+            }
+        }
+
+        // FIXED: Initialize scroll tracking with Intersection Observer
+        function initializeScrollTracking() {
+            const topicsContainer = getElement('topics-scroll-container');
+            if (!topicsContainer) return;
+
+            // Clean up existing observer
+            if (intersectionObserver) {
+                intersectionObserver.disconnect();
+            }
+
+            // Create new observer with proper configuration
+            intersectionObserver = new IntersectionObserver(
+                (entries) => {
+                    // Only update if not programmatically scrolling
+                    if (appState.isScrolling) return;
+                    
+                    let mostVisibleEntry = null;
+                    let highestRatio = 0;
+
+                    // Find the category with the highest visibility ratio
+                    entries.forEach(entry => {
+                        if (entry.isIntersecting && entry.intersectionRatio > highestRatio) {
+                            highestRatio = entry.intersectionRatio;
+                            mostVisibleEntry = entry;
+                        }
+                    });
+
+                    // Update active category if we found a visible one
+                    if (mostVisibleEntry && highestRatio > 0.1) {
+                        const categoryId = mostVisibleEntry.target.id.replace('category-', '').replace(/-/g, ' ');
+                        if (categoryId !== appState.currentCategory) {
+                            setActiveCategory(categoryId, false);
+                        }
+                    }
+                },
+                {
+                    root: topicsContainer,
+                    rootMargin: '-10% 0px -40% 0px', // Adjusted margins for better tracking
+                    threshold: [0, 0.1, 0.3, 0.5, 0.7, 1]
+                }
+            );
+
+            // Observe all category sections
+            document.querySelectorAll('.topic-category').forEach(section => {
+                intersectionObserver.observe(section);
+            });
+
+            // Add scroll event listener for additional tracking
+            topicsContainer.addEventListener('scroll', handleTopicsScroll);
+        }
+
+        // Handle scroll events on topics container
+        function handleTopicsScroll() {
+            // Clear any existing timeout
+            if (appState.scrollTimeout) {
+                clearTimeout(appState.scrollTimeout);
+            }
+            
+            // Set a new timeout to detect when scrolling stops
+            appState.scrollTimeout = setTimeout(() => {
+                // If not programmatically scrolling, update active category based on scroll position
+                if (!appState.isScrolling) {
+                    updateActiveCategoryFromScroll();
+                }
+            }, 150);
+        }
+
+        // Update active category based on scroll position
+        function updateActiveCategoryFromScroll() {
+            const topicsContainer = getElement('topics-scroll-container');
+            const categorySections = document.querySelectorAll('.topic-category');
+            
+            if (!topicsContainer || categorySections.length === 0) return;
+            
+            const containerRect = topicsContainer.getBoundingClientRect();
+            const containerCenter = containerRect.top + (containerRect.height / 2);
+            
+            let closestSection = null;
+            let closestDistance = Infinity;
+            
+            // Find the category section closest to the center of the container
+            categorySections.forEach(section => {
+                const sectionRect = section.getBoundingClientRect();
+                const sectionCenter = sectionRect.top + (sectionRect.height / 2);
+                const distance = Math.abs(sectionCenter - containerCenter);
+                
+                if (distance < closestDistance) {
+                    closestDistance = distance;
+                    closestSection = section;
+                }
+            });
+            
+            // Update active category if we found a section
+            if (closestSection) {
+                const categoryId = closestSection.id.replace('category-', '').replace(/-/g, ' ');
+                if (categoryId !== appState.currentCategory) {
+                    setActiveCategory(categoryId, false);
+                }
+            }
+        }
+
+        // FIXED: Render topic categories
+        function renderTopicCategories() {
+            const topicsContainer = getElement('topics-scroll-container');
+            if (!topicsContainer) return;
+
+            topicsContainer.innerHTML = CATEGORIES.map(category => {
+                const categoryTopics = TOPIC_POOL.filter(t => t.category === category);
+                const isActive = category === appState.currentCategory;
+                
+                return `
+                    <div class="topic-category ${isActive ? 'active' : ''}" id="category-${category.replace(/\s+/g, '-')}">
+                        <h3 class="text-2xl font-bold text-gray-800 mb-6">${category}</h3>
+                        <div class="topic-grid">
+                            ${categoryTopics.map(topic => {
+                                const isSelected = appState.selectedTopicIds.includes(topic.id);
+                                const idString = typeof topic.id === 'number' ? topic.id : `'${topic.id}'`;
+                                
+                                return `
+                                    <div id="topic-${topic.id}" class="card-topic ${isSelected ? 'selected' : ''}" 
+                                         onclick="toggleSelection(${idString}, 'topic')">
+                                        <span class="text-4xl mb-3">${topic.icon}</span>
+                                        <h4 class="font-semibold text-gray-800 text-lg">${topic.name}</h4>
+                                        ${isSelected ? `<div class="priority-number">${appState.selectedTopicIds.indexOf(topic.id) + 1}</div>` : ''}
+                                    </div>
+                                `;
+                            }).join('')}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // =====================================================================================================
+        // REMAINING FUNCTIONS FOR STEPS 3-5
+        // =====================================================================================================
+
+        // Function to render all cards (for Step 3)
+        function renderCards() {
+            // For Step 2, we use the new layout with scroll-triggered categories
+            if (appState.currentStep === 2) {
+                renderCategorySidebar();
+                renderTopicCategories();
+                return;
+            }
+
+            // For Step 3, use the original format cards
+            const formatContainer = getElement('format-cards');
+            formatContainer.innerHTML = FORMAT_POOL.map(f => {
+                const selectedItem = appState.selectedFormats.find(sf => sf.id === f.id);
+                const isSelected = !!selectedItem;
+                const count = isSelected ? selectedItem.count : 0;
+
+                return `
+                <div id="format-${f.id}" class="card-format p-4 rounded-xl flex flex-col items-center justify-between text-center h-full ${isSelected ? 'selected' : ''}" onclick="toggleFormatSelection('${f.id}')">
+                    
+                    <div>
+                        <span class="${isSelected ? 'text-2xl' : 'text-3xl'} mb-1 transition-all">${f.icon}</span>
+                        <h3 class="${isSelected ? 'text-base font-bold' : 'font-semibold'} text-gray-800 transition-all">${f.name}</h3>
+                        <p class="${isSelected ? 'text-xs' : 'text-xs'} text-gray-500 ${isSelected ? 'line-clamp-3' : ''} transition-all">${f.description}</p>
+                    </div>
+                    
+                    ${isSelected ? `
+                    <div class="format-counter-container mt-2 pt-2 border-t border-indigo-200 w-full flex-shrink-0">
+                        <label class="block text-xs font-medium text-gray-700 mb-1">Quantity</label>
+                        <div class="flex items-center justify-center space-x-2 mt-1">
+                            <button id="btn-minus-${f.id}" class="counter-btn" onclick="event.stopPropagation(); updateFormatCount('${f.id}', -1)" ${count <= 1 ? 'disabled' : ''}>-</button>
+                            <span id="count-${f.id}" class="text-lg font-bold w-8 text-center">${count}</span>
+                            <button id="btn-plus-${f.id}" class="counter-btn" onclick="event.stopPropagation(); updateFormatCount('${f.id}', 1)" ${count >= 3 ? 'disabled' : ''}>+</button>
+                        </div>
+                    </div>
+                    ` : ''}
+                </div>
+                `;
+            }).join('');
+
+            updateTopicSelectionVisuals();
+        }
+
+        function handleSelectCustomTopic() {
+            const customTopicInput = getElement('custom-topic-text');
+            const topicName = customTopicInput.value.trim();
+
+            if (!topicName) return;
+
+            const customId = 'custom_topic';
+            const newTopic = { 
+                id: customId, 
+                name: topicName, 
+                icon: '🔍', 
+                category: 'Custom Search'
+            };
+
+            TOPIC_POOL = TOPIC_POOL.filter(t => t.id !== customId && t.id !== 'random_topic' && t.id !== 'uploaded');
+            appState.selectedTopicIds = appState.selectedTopicIds.filter(id => id !== customId && id !== 'random_topic' && id !== 'uploaded');
+            if (appState.uploadedTopic) appState.uploadedTopic = null;
+
+            TOPIC_POOL.unshift(newTopic);
+
+            if (appState.selectedTopicIds.length >= 2) {
+                const idToDeselect = appState.selectedTopicIds.pop();
+                const elementToDeselect = getElement(`topic-${idToDeselect}`);
+                if (elementToDeselect) elementToDeselect.classList.remove('selected');
+            }
+            
+            appState.selectedTopicIds.push(customId);
+
+            renderCards();
+            updateButtonStates();
+            
+            customTopicInput.value = '';
+            const newCardElement = getElement(`topic-${customId}`);
+            if (newCardElement) newCardElement.classList.add('selected');
+        }
+        
+        async function handleSelectRandomTopic() {
+            const randomTopicId = 'random_topic';
+            
+            const randomBtn = getElement('select-random-topic-btn');
+            const originalHtml = randomBtn.innerHTML;
+            randomBtn.disabled = true;
+            randomBtn.innerHTML = '<div class="spinner w-5 h-5"></div> <span class="text-xs mt-1">Generating...</span>';
+            
+            try {
+                if (!API_KEY) {
+                    throw new Error("API Key is required to use the topic randomizer. Please complete Step 1.");
+                }
+                
+                const payload = {
+                    model: OPENAI_MODEL,
+                    messages: [
+                        { role: "system", content: "You are a creative random topic generator. Your sole task is to generate 1 or 2 distinct, creative, and specific English learning topics suitable for a lesson. The response MUST be a raw JSON object containing a single key 'topics' with a JSON array of strings. Example response: {\"topics\": [\"The Sociology of Memes\", \"Deep Sea Hydrothermal Vents\"]}" },
+                        { role: "user", content: "Generate 1 or 2 random, unique, and specific English learning topics." }
+                    ],
+                    response_format: { type: "json_object" }
+                };
+                
+                const apiResponse = await callOpenAIApi(payload);
+                const textPart = apiResponse?.choices?.[0]?.message?.content;
+                let randomTopics = [];
+                
+                if (textPart) {
+                    try {
+                        let jsonResponse = JSON.parse(textPart);
+                        
+                        if (jsonResponse.topics && Array.isArray(jsonResponse.topics)) {
+                            randomTopics = jsonResponse.topics;
+                        } else if (typeof jsonResponse === 'object' && !Array.isArray(jsonResponse)) {
+                            const firstArray = Object.values(jsonResponse).find(Array.isArray);
+                            if (firstArray) randomTopics = firstArray;
+                        }
+
+                        randomTopics = Array.isArray(randomTopics) ? randomTopics.slice(0, 2).map(String) : [];
+
+                    } catch (e) {
+                        console.warn("JSON parsing failed, attempting text extraction fallback.", e);
+                        randomTopics = textPart.split('\n')
+                                                .map(t => t.replace(/[^a-zA-Z0-9\s.:-]/g, '').trim())
+                                                .filter(Boolean)
+                                                .slice(0, 2);
+                    }
+                }
+                
+                if (randomTopics.length === 0) {
+                     throw new Error("LLM failed to return a valid random topic.");
+                }
+                
+                TOPIC_POOL = TOPIC_POOL.filter(t => t.id !== randomTopicId && t.id !== 'custom_topic' && t.id !== 'uploaded');
+                appState.selectedTopicIds = appState.selectedTopicIds.filter(id => id !== randomTopicId && id !== 'custom_topic' && id !== 'uploaded');
+                if (appState.uploadedTopic) appState.uploadedTopic = null;
+
+                const newTopicName = randomTopics.join(' & ');
+                const newTopic = { 
+                    id: randomTopicId, 
+                    name: newTopicName, 
+                    icon: '🎲', 
+                    category: 'Random Generator',
+                    content: `Randomly generated topics: ${randomTopics.join(' | ')}`
+                };
+                
+                TOPIC_POOL.unshift(newTopic);
+                
+                if (appState.selectedTopicIds.length >= 2) {
+                    const idToDeselect = appState.selectedTopicIds.pop();
+                    const elementToDeselect = getElement(`topic-${idToDeselect}`);
+                    if (elementToDeselect) elementToDeselect.classList.remove('selected');
+                }
+                appState.selectedTopicIds.push(randomTopicId);
+                
+                renderCards();
+                updateButtonStates();
+                
+                const newCardElement = getElement(`topic-${randomTopicId}`);
+                if (newCardElement) newCardElement.classList.add('selected');
+
+            } catch (error) {
+                 console.error("Random Topic Generation Error:", error.message);
+                 alert(`Failed to generate random topic. Error: ${error.message}`);
+            } finally {
+                randomBtn.innerHTML = originalHtml;
+                randomBtn.disabled = false;
+            }
+        }
+
+        function handleUploadTopic(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const content = e.target.result;
+                const fileName = file.name;
+                const uploadedId = 'uploaded';
+
+                const newTopic = { 
+                    id: uploadedId, 
+                    name: `File: ${fileName}`, 
+                    icon: '📄', 
+                    category: 'Uploaded Document',
+                    content: content
+                };
+
+                TOPIC_POOL = TOPIC_POOL.filter(t => t.id !== uploadedId && t.id !== 'custom_topic' && t.id !== 'random_topic');
+                appState.selectedTopicIds = appState.selectedTopicIds.filter(id => id !== uploadedId && id !== 'custom_topic' && id !== 'random_topic');
+
+                TOPIC_POOL.unshift(newTopic);
+                appState.uploadedTopic = newTopic;
+
+                if (appState.selectedTopicIds.length >= 2) {
+                    const idToDeselect = appState.selectedTopicIds.pop();
+                    const elementToDeselect = getElement(`topic-${idToDeselect}`);
+                    if (elementToDeselect) elementToDeselect.classList.remove('selected');
+                }
+                appState.selectedTopicIds.push(uploadedId);
+
+                renderCards();
+                updateButtonStates();
+                
+                const newCardElement = getElement(`topic-${uploadedId}`);
+                if (newCardElement) newCardElement.classList.add('selected');
+
+                event.target.value = null; 
+            };
+            reader.readAsText(file);
+        }
+
+        // MODIFIED: Function to handle user input changes and store them in appState.userAnswers
+        function handleUserAnswer(assignmentIndex, inputElement, answerType, subIndex = null) {
+            appState.userAnswers[assignmentIndex] = appState.userAnswers[assignmentIndex] || {};
+
+            // MODIFIED: Handle multi-input arrays for Vocab, Grammar, and MC
+            if (subIndex !== null) {
+                if (!appState.userAnswers[assignmentIndex].answer) {
+                    appState.userAnswers[assignmentIndex].answer = []; // Initialize as array
+                }
+                
+                if (answerType === 'MultipleChoice') {
+                    appState.userAnswers[assignmentIndex].answer[subIndex] = inputElement.value; // Store index
+                    // No visual feedback needed for plain radio buttons
+                } else {
+                    appState.userAnswers[assignmentIndex].answer[subIndex] = inputElement.value.trim(); // Store text
+                }
+                return; // Skip other logic
+            }
+            
+            // Handle single-input types (WritingPrompt)
+            if (answerType === 'WritingPrompt') {
+                appState.userAnswers[assignmentIndex].answer = inputElement.value.trim();
+            }
+        }
+
+        // MODIFIED: Function to render interactive elements based on assignment type
+        function renderInteractiveElement(assignment, index) {
+            const assignmentId = `assignment-${index}`;
+            const type = assignment.type;
+            let html = '';
+
+            // MODIFIED: New MultipleChoice rendering (5-in-1, prot_4 style)
+            if (type === 'MultipleChoice' && assignment.questions && Array.isArray(assignment.questions)) {
+                html += '<div class="space-y-4">'; // Space between each question
+
+                assignment.questions.forEach((mcq, mcqIndex) => {
+                    const savedChoice = (appState.userAnswers[index]?.answer || [])[mcqIndex]; // This is the index "0", "1" etc.
+                    
+                    html += `<div class="p-3 border rounded-lg bg-gray-50" id="${assignmentId}-mcq-${mcqIndex}">`;
+                    // MODIFIED: Trim question text
+                    html += `<p class="font-medium mb-2">${mcqIndex + 1}. ${mcq.question_text.trim()}</p>`; // Question text
+                    
+                    // Render the plain radio button options from prot_4
+                    mcq.options.forEach((option, optionIndex) => {
+                        const optionId = `${assignmentId}-mcq-${mcqIndex}-option-${optionIndex}`;
+                        // Check if this option was the one saved
+                        const isChecked = savedChoice === String(optionIndex);
+                        
+                        html += `
+                            <label for="${optionId}" class="block">
+                                <input type="radio" id="${optionId}" name="assignment-${index}-mc-${mcqIndex}" 
+                                       value="${optionIndex}" class="mr-2"
+                                       onchange="handleUserAnswer(${index}, this, '${type}', ${mcqIndex})"
+                                       ${isChecked ? 'checked' : ''}>
+                                ${option}
+                            </label>
+                        `;
+                    });
+                    html += '</div>'; // Close p-3
+                });
+                html += '</div>'; // Close space-y-4
+
+            // MODIFIED: New GrammarPractice rendering (5-in-1)
+            } else if (type === 'GrammarPractice' && assignment.content) {
+                html += '<div class="space-y-4">';
+                // MODIFIED: Trim content and split lines
+                const lines = (assignment.content || "").trim().split('\n').filter(Boolean);
+                
+                lines.forEach((line, lineIndex) => {
+                    // MODIFIED: Trim individual line
+                    const parts = line.trim().split('___');
+                    const savedAnswer = (appState.userAnswers[index]?.answer || [])[lineIndex] || '';
+                    if (parts.length > 1) {
+                        // UPDATED: Removed duplicate numbering
+                        html += `
+                            <div class="flex items-center space-x-2 flex-wrap">
+                                <span class="text-gray-700">${parts[0].trim()}</span>
+                                <input type="text" id="${assignmentId}-input-${lineIndex}" class="grammar-input" placeholder="Answer"
+                                       oninput="handleUserAnswer(${index}, this, '${type}', ${lineIndex})"
+                                       value="${savedAnswer}">
+                                <span class="text-gray-700">${parts[1].trim()}</span>
+                            </div>
+                        `;
+                    }
+                });
+                html += '</div>';
+
+            // MODIFIED: New VocabularyWords rendering
+            } else if (type === 'VocabularyWords' && assignment.content) {
+                // MODIFIED: Trim content and split lines
+                const lines = (assignment.content || "").trim().split('\n').filter(Boolean);
+                const instruction = lines[0].trim() + " (Write one sentence for each word below.)";
+                const words = lines.slice(1);
+                
+                html += `<p class="text-gray-700 font-medium mb-4">${instruction}</p>`; // The instruction
+                html += '<div class="space-y-4">'; // Container
+                html += words.map((word, vIndex) => {
+                    const savedAnswer = (appState.userAnswers[index]?.answer || [])[vIndex] || '';
+                    return `
+                        <p class="font-semibold">${word.trim()}</p>
+                        <textarea id="${assignmentId}-answer-${vIndex}" class="input-style" rows="2" 
+                                  placeholder="Write one sentence using the word..."
+                                  oninput="handleUserAnswer(${index}, this, 'VocabularyWords', ${vIndex})">${savedAnswer}</textarea>
+                    `;
+                }).join('');
+                html += '</div>';
+
+            } else if (type === 'WritingPrompt' && assignment.content) {
+                html += '<p class="text-sm font-semibold text-gray-700 mb-2 mt-2">Your Response (Ungraded):</p>';
+                html += `
+                    <textarea id="${assignmentId}-input" rows="5" placeholder="Write your response here..."
+                              class="input-style"
+                              oninput="handleUserAnswer(${index}, this, '${type}')">${appState.userAnswers[index]?.answer || ''}</textarea>
+                `;
+            } else {
+                // Fallback for unexpected format
+                const fallbackContent = (assignment.question || assignment.content || "Error: Could not render").trim();
+                html += `<p class="text-sm text-red-500">Error: Could not render interactive element for this type. Content: ${fallbackContent}</p>`;
+            }
+
+            return html;
+        }
+
+        // NEW: Creates the DOM element for a summary
+        function createSummaryElement(summaryText, title) {
+            const summaryDiv = document.createElement('div');
+            summaryDiv.className = 'summary-block';
+            summaryDiv.innerHTML = `
+                <h2 class="text-xl font-bold text-gray-800 mb-3">${title}</h2>
+                <div class="text-gray-700 leading-relaxed whitespace-pre-wrap">${summaryText}</div>
+            `;
+            return summaryDiv;
+        }
+
+        // NEW: Creates the DOM element for an assignment (refactored from displayAssignments)
+        function createAssignmentElement(assignment, index) {
+            const card = document.createElement('div');
+            // MODIFIED: Use 4 colors
+            const sidebarColors = ['block-order-1', 'block-order-2', 'block-order-3', 'block-order-4'];
+            const colorClass = sidebarColors[index % 4];
+            
+            // NEW: Using .assignment-block class and ID
+            card.className = `assignment-block ${colorClass}`; 
+            card.id = `assignment-card-${index}`; // Keep ID for graders
+
+            // MODIFIED: Handle what content to show in the top block
+            let assignmentContent = "";
+            if (assignment.type === 'WritingPrompt') {
+                // Only WritingPrompt shows its content here
+                assignmentContent = (assignment.content || "").trim();
+            } else if (assignment.type === 'GrammarPractice') {
+                // Grammar shows its main "question" (instruction) here
+                assignmentContent = (assignment.question || "").trim();
+            }
+            // VocabularyWords and MultipleChoice show NOTHING here
+
+            const typeName = formatTypeToName(assignment.type); // Use helper
+            // Add a number if there are multiple assignments of the same type
+            const assignmentTitle = assignment.title || 'Assignment';
+            
+            // Get HTML from the modified render function
+            const interactiveHtml = renderInteractiveElement(assignment, index);
+
+            // NEW HTML Structure (from prot_4)
+            card.innerHTML = `
+                <h3 class="text-2xl font-bold mb-3">${typeName} - <span class="text-lg font-medium text-gray-500">${assignmentTitle}</span></h3>
+                
+                ${assignmentContent ? `
+                    <div class="question-area mb-4">
+                        <div class="text-gray-700 leading-relaxed whitespace-pre-wrap">
+                            ${assignmentContent.replace(/\n/g, '<br>')}
+                        </div>
+                    </div>
+                ` : ''} 
+
+                <div class="interactive-area pt-2">
+                    ${interactiveHtml}
+                </div>
+                
+                <div id="feedback-${index}" class="text-sm mt-4 p-3 rounded-lg hidden border-l-4"></div>
+            `;
+            return card;
+        }
+
+        // MODIFIED: This function now builds the visual structure from prot_4
+        // AND includes the new Summary logic
+        function displayAssignments() {
+            const resultsContainer = getElement('assignments-workspace');
+            const submitButton = getElement('submit-assignments');
+            
+            resultsContainer.innerHTML = ''; // Clear previous content
+            
+            // UPDATED: Remove "No Assignments" message handling
+            const hasContent = appState.generatedSummaries.length > 0 || appState.generatedAssignments.length > 0;
+            
+            if (!hasContent) {
+                resultsContainer.classList.add('hidden');
+                submitButton.classList.add('hidden'); // Hide submit if no assignments
+                return;
+            }
+            
+            // Show assignments
+            resultsContainer.classList.remove('hidden');
+            submitButton.classList.remove('hidden');
+
+            // Initialize userAnswers array
+            appState.userAnswers = new Array(appState.generatedAssignments.length).fill(null).map(() => ({ answer: null })); // Use null for array/string flexibility
+            getElement('grading-summary').classList.add('hidden');
+
+            // MODIFIED: Populate new header with ALL topics
+            const topicNames = appState.selectedTopicIds.map(id => {
+                return TOPIC_POOL.find(t => t.id === id)?.name;
+            }).filter(Boolean).join(', ') || 'N/A';
+            
+            getElement('final-topic-display').textContent = topicNames;
+            getElement('final-level-display').textContent = appState.cefrLevel;
+            
+            // --- SIMPLIFIED DISPLAY LOGIC (ALWAYS MERGE) ---
+            const summary = appState.generatedSummaries[0]?.summary;
+            if (summary) {
+                resultsContainer.appendChild(createSummaryElement(summary, 'Topic Summary'));
+            }
+            appState.generatedAssignments.forEach((assignment, index) => {
+                resultsContainer.appendChild(createAssignmentElement(assignment, index));
+            });
+            // --- END SIMPLIFIED DISPLAY LOGIC ---
+        }
+        
+        // =====================================================================================================
+        // OPENAI API INTEGRATION LOGIC
+        // =====================================================================================================
+
+        async function callOpenAIApi(payload) {
+            const maxRetries = 3;
+
+            for (let attempt = 0; attempt < maxRetries; attempt++) {
+                try {
+                    const response = await fetch(OPENAI_URL, {
+                        method: 'POST',
+                        headers: { 
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${API_KEY}` // Using Authorization header
+                        },
+                        body: JSON.stringify(payload)
+                    });
+
+                    if (response.status === 401) {
+                        throw new Error("Unauthorized (401). Please check if your OpenAI API Key is valid and correctly entered.");
+                    }
+                    if (!response.ok) {
+                        const errorBody = await response.json();
+                        console.error(`Attempt ${attempt + 1} failed:`, errorBody);
+                        throw new Error(`OpenAI API error: ${response.status} - ${errorBody.error?.message || 'Unknown error'}`);
+                    }
+
+                    const result = await response.json();
+                    return result;
+
+                } catch (error) {
+                    if (attempt < maxRetries - 1) {
+                        const delay = Math.pow(2, attempt) * 2000; // Exponential backoff (2s, 4s)
+                        await new Promise(resolve => setTimeout(resolve, delay));
+                    } else {
+                        // Throw final error if max retries reached
+                        throw new Error(`Failed to communicate with OpenAI after ${maxRetries} attempts. Details: ${error.message}`);
+                    }
+                }
+            }
+        }
+
+        function processGeneratedText(apiResponse) {
+            try {
+                // OpenAI JSON mode returns content in choices[0].message.content
+                const textPart = apiResponse?.choices?.[0]?.message?.content;
+                
+                if (!textPart) {
+                    throw new Error("OpenAI response was empty or malformed.");
+                }
+
+                // The model is instructed to return a JSON object like { "assignments": [...] }
+                const responseJson = JSON.parse(textPart);
+
+                if (!Array.isArray(responseJson.assignments)) {
+                    throw new Error("LLM response did not contain the expected 'assignments' array.");
+                }
+
+                return responseJson.assignments;
+
+            } catch (e) {
+                console.error("Error parsing LLM output:", e);
+                throw new Error("Could not process the generated assignment text. The LLM might have returned invalid JSON or a non-compliant structure.");
+            }
+        }
+
+        // NEW: Function to generate just the summary
+        async function generateTopicSummary(topicIds) {
+            const payload = buildSummaryPayload(topicIds, appState);
+            const apiResponse = await callOpenAIApi(payload);
+            // For text-only response, we don't parse JSON
+            const summaryText = apiResponse?.choices?.[0]?.message?.content;
+            if (!summaryText) {
+                throw new Error("LLM failed to return a summary text.");
+            }
+            return summaryText;
+        }
+
+        // NEW: Function to generate just the assignments
+        async function generateAssignmentsForTopics(topicIds, summary) {
+            const payload = buildOpenAIPayload(topicIds, summary, appState);
+            const apiResponse = await callOpenAIApi(payload);
+            // This call expects JSON, so we process it
+            return processGeneratedText(apiResponse);
+        }
+
+        // MODIFIED: This is the new master generation function
+        async function startGeneration() {
+            // Check for API Key
+            if (!API_KEY) {
+                getElement('error-message').textContent = "Please enter your OpenAI API Key in Step 1 to continue.";
+                getElement('generation-error').classList.remove('hidden');
+                showStep(1);
+                return;
+            }
+
+            // Show Step 4 and the loading state
+            showStep(4);
+            getElement('generation-error').classList.add('hidden');
+            getElement('generation-loading').classList.remove('hidden');
+            getElement('assignments-workspace').classList.add('hidden');
+            
+            // Disable buttons
+            getElement('step-4-back-to-prev').disabled = true;
+            getElement('submit-assignments').disabled = true;
+
+            try {
+                // Clear old data
+                appState.generatedSummaries = [];
+                appState.generatedAssignments = [];
+                displayAssignments(); // Clear the UI
+
+                const topicIds = appState.selectedTopicIds;
+
+                if (topicIds.length > 0) {
+                    // Generate summary first
+                    const summary = await generateTopicSummary(topicIds);
+                    appState.generatedSummaries.push({ topicId: 'merged', summary: summary });
+
+                    // Generate assignments using the summary
+                    const assignments = await generateAssignmentsForTopics(topicIds, summary);
+                    appState.generatedAssignments = assignments;
+                } else {
+                    throw new Error("No topics selected. Please go back to Step 2.");
+                }
+
+                // Now display everything
+                displayAssignments();
+
+            } catch (error) {
+                console.error("Critical Generation Error:", error);
+                // Show the error message to the user
+                const errorMessageElement = getElement('error-message');
+                errorMessageElement.textContent = `The generation process failed: ${error.message}. Please check your API key, network connection, or try again.`;
+                getElement('generation-error').classList.remove('hidden');
+
+                // Clear any old assignments
+                appState.generatedSummaries = [];
+                appState.generatedAssignments = [];
+                displayAssignments(); // This will show the "no assignments" message
+                getElement('assignments-workspace').classList.add('hidden');
+            } finally {
+                getElement('generation-loading').classList.add('hidden');
+                // Re-enable buttons
+                getElement('step-4-back-to-prev').disabled = false;
+                updateButtonStates(); // This will re-check if submit should be enabled
+            }
+        }
+
+        // MODIFIED: This function now takes arguments instead of reading global state
+        function buildOpenAIPayload(topicIds, summary, appState) {
+            const level = appState.cefrLevel;
+            
+            // Get selected topic details
+            const selectedTopics = topicIds.map(id => {
+                return TOPIC_POOL.find(t => t.id === id);
+            }).filter(Boolean);
+
+            const topicNames = selectedTopics.map(t => t.name);
+            
+            // Priority weight logic for LLM
+            const priorityExplanation = selectedTopics.length === 2 
+                ? `Topic 1 (${topicNames[0]}) has a 60% priority weight. Topic 2 (${topicNames[1]}) has a 40% priority weight.` 
+                : selectedTopics.length === 1 
+                ? `Topic 1 (${topicNames[0]}) has a 100% priority weight.`
+                : '';
+
+            // This now builds the formatTypes array based on the counts
+            const formatTypes = [];
+            appState.selectedFormats.forEach(sf => {
+                const formatFromPool = FORMAT_POOL.find(f => f.id === sf.id);
+                if (formatFromPool) {
+                    for (let i = 0; i < sf.count; i++) {
+                        formatTypes.push(formatFromPool.type);
+                    }
+                }
+            });
+            
+            const numAssignments = formatTypes.length; // This now reflects the total count
+
+            // MODIFIED: Updated system prompt with new requirements
+            const systemPrompt = `You are an expert English assignment generator. Your task is to create ${numAssignments} high-quality, professional English learning assignments based on the user's detailed criteria.
+            The user requires the output to be a single, raw JSON object that conforms EXACTLY to the following structure. DO NOT include any explanatory text, markdown, or preamble/postamble outside of the JSON block.
+            
+            JSON Structure:
+            {
+              "assignments": [
+                {
+                  "title": "A concise title for the assignment.",
+                  "type": "The exact assignment type, MUST be one of: ${formatTypes.join(', ')}",
+                  "content": "The full instructions/body text for WritingPrompt OR the 5 sentences for GrammarPractice (separated by \\n) OR the list of words for VocabularyWords.",
+                  "question": "The main instruction text for MultipleChoice OR GrammarPractice (e.g., 'Choose the best option.' or 'Fill in the blanks.').",
+                  "correctAnswer": "An array of 5 correct answer strings for GrammarPractice (e.g., ["is", "are", "was", "were", "been"]). Null otherwise.",
+                  
+                  "questions": [
+                    {
+                      "question_text": "The text for an individual question.",
+                      "options": ["A", "B", "C", "D"],
+                      "correctAnswerIndex": 0
+                    }
+                  ]
+                },
+                ... (one object for each requested assignment format, respecting the requested quantity of each type)
+              ]
+            }
+            
+            CRITICAL REQUIREMENTS:
+            
+            1. CEFR LEVEL ENFORCEMENT:
+               - ALL content MUST be written at the CEFR ${level} level.
+               - Use vocabulary, grammar complexity, and sentence structures appropriate for ${level} learners.
+               - The difficulty MUST match the specified ${level} level EXACTLY.
+               
+            2. ASSIGNMENT-SPECIFIC RULES:
+            
+            - WritingPrompt: 
+              * MUST be directly based on and test comprehension of the provided summary text.
+              * Use 'content' for the prompt. Set all other fields to null.
+              
+            - MultipleChoice:
+              * MUST be directly based on and test comprehension of the provided summary text.
+              * Use 'question' for the main instruction (e.g., "Read the text and choose...").
+              * Use the 'questions' array to provide 5 individual multiple-choice questions that test comprehension of the summary.
+              * Set 'content' and 'correctAnswer' to null.
+              
+            - VocabularyWords:
+              * Can be loosely related to the topics.
+              * Use 'content' for the prompt AND the list of words. The first line is the prompt, subsequent lines are the words (e.g., "Use these words in a sentence:\\n1. Word (n): Definition...\\n2. Word (v): Definition..."). 
+              * Set all other fields to null.
+              
+            - GrammarPractice:
+              * Can be loosely related to the topics.
+              * Use 'question' for the main instruction (e.g., "Complete the sentences...").
+              * Use 'content' for the 5 sentences, each separated by \\n and containing a '___' blank. 
+              * Use 'correctAnswer' for an array of 5 correct strings. 
+              * Set 'questions' to null.
+            `;
+            
+            // User Query: Supplies the specific content criteria
+            const userQuery = `
+                Generate the assignments now.
+                
+                1. Difficulty Level (CEFR): ${level}
+                2. Core Topic(s) (in order of priority): ${topicNames.join(', ')}
+                3. Assignment Formats (requesting the TYPES): ${formatTypes.join(', ')}
+                4. Generated Summary Text: "${summary}"
+
+                CRITICAL INSTRUCTIONS:
+                
+                - WritingPrompt and MultipleChoice assignments MUST be EXPLICITLY based on the provided summary text above.
+                - VocabularyWords and GrammarPractice can be more loosely related to the topics.
+                - ${priorityExplanation}
+                
+                You must generate exactly ${numAssignments} total assignments, one for each type listed in 'Assignment Formats'.
+            `;
+            
+            return {
+                model: OPENAI_MODEL,
+                messages: [
+                    { role: "system", content: systemPrompt },
+                    { role: "user", content: userQuery }
+                ],
+                // CRITICAL: Force the model to return a JSON object
+                response_format: { type: "json_object" }
+            };
+        }
+
+        // NEW: Creates the payload for the summary generation
+        function buildSummaryPayload(topicIds, appState) {
+            const level = appState.cefrLevel;
+            
+            // Get selected topic details
+            const selectedTopics = topicIds.map(id => {
+                return TOPIC_POOL.find(t => t.id === id);
+            }).filter(Boolean);
+
+            const topicNames = selectedTopics.map(t => t.name);
+            const topicContent = selectedTopics.map(t => {
+                if ((t.id === 'custom_topic' || t.id === 'uploaded' || t.id === 'random_topic') && t.content) {
+                    return `\n\n[USER PROVIDED CONTENT FOR ${t.name}:\n${t.content.substring(0, 500)}...\n]`
+                }
+                return '';
+            }).join('');
+            
+            const priorityExplanation = selectedTopics.length === 2 
+                ? `Topic 1 (${topicNames[0]}) has a 60% priority weight. Topic 2 (${topicNames[1]}) has a 40% priority weight.` 
+                : `Topic 1 (${topicNames[0]}) has a 100% priority weight.`;
+
+            // MODIFIED: Updated summary prompt with new two-topic relationship structure
+            const systemPrompt = `You are an expert educator and creative writer. Your task is to generate a single, high-quality, and informative topic summary for an English learner.
+            - The summary MUST be between 200 and 300 words.
+            - The summary MUST be written at the specified CEFR level (${level}). Use vocabulary and sentence structures appropriate for ${level} learners.
+            - You MUST return ONLY the raw text of the summary.
+            - Do NOT include any titles, headers, markdown, or any text other than the summary itself.
+            - Do NOT return JSON.
+            
+            CRITICAL STRUCTURE (ESPECIALLY FOR TWO TOPICS):
+            - If one topic is provided, create a clear summary of it.
+            - If two topics are provided, you MUST weave them together into a single, cohesive "story" or narrative. Do NOT just list them.
+            - Start by very briefly introducing each topic's core idea (one sentence each).
+            - Then, immediately begin to merge and connect them.
+            - Your main task is to find or create a relationship between them.
+            
+            1.  **Analyze the Relationship:** First, determine if the topics have a realistic, factual relationship.
+            2.  **Realistic Story:** If they DO have a factual connection (e.g., "AI & ML" and "Cybersecurity"), create the summary "story" about this real-world relationship.
+            3.  **Creative Story:** If they do NOT have an obvious factual connection (e.g., "Quantum Physics" and "Shakespeare"), you MUST get creative. Invent a hypothetical or metaphorical relationship. Create a "story" that links them in a compelling, imaginative way. You can state that this is a creative or "fantasy" connection if it helps the narrative.
+            
+            - The goal is a single, merged summary, not two separate ones.
+            `;
+            
+            const userQuery = `
+                Generate the topic summary now.
+                1. Difficulty Level (CEFR): ${level}
+                2. Core Topic(s) (in order of priority): ${topicNames.join(', ')}
+                3. Word Count: 200-300 words.
+                
+                ${priorityExplanation}
+                ${topicContent}
+                
+                Return ONLY the raw text of the summary.
+            `;
+            
+            return {
+                model: OPENAI_MODEL, // Use the same model
+                messages: [
+                    { role: "system", content: systemPrompt },
+                    { role: "user", content: userQuery }
+                ],
+                // DO NOT include response_format, as we want plain text
+            };
+        }
+
+        // MODIFIED: Grading Function to support new array-based answers
+        function gradeAssignments() {
+            let correctCount = 0;
+            let totalGradable = 0;
+            let finalAssignmentText = '';
+            
+            // NEW: Add summaries to the final text
+            appState.generatedSummaries.forEach(summaryItem => {
+                const topic = TOPIC_POOL.find(t => t.id === summaryItem.topicId);
+                const title = topic ? topic.name : 'Summary';
+                finalAssignmentText += `========== SUMMARY: ${title} ==========\n${summaryItem.summary}\n\n`;
+            });
+            if (appState.generatedSummaries.length > 0) {
+                 finalAssignmentText += `\n========== ASSIGNMENTS ==========\n`;
+            }
+
+            appState.generatedAssignments.forEach((assignment, index) => {
+                const userAnswer = appState.userAnswers[index]?.answer; // This can be a string OR an array
+                const feedbackElement = getElement(`feedback-${index}`);
+                const cardElement = getElement(`assignment-card-${index}`);
+                const type = assignment.type;
+
+                // Reset state
+                feedbackElement.classList.add('hidden');
+                feedbackElement.className = 'text-sm mt-4 p-3 rounded-lg border-l-4'; 
+                
+                // MODIFIED: New MC grading logic
+                if (type === 'MultipleChoice' && assignment.questions) {
+                    let correctInBlock = 0;
+                    const userAnswerArray = userAnswer || [];
+                    const totalInBlock = assignment.questions.length;
+                    totalGradable += totalInBlock;
+                    
+                    let mcqFinalText = '';
+                    let mcqFeedbackText = ''; // Text for Step 4 feedback
+
+                    assignment.questions.forEach((mcq, mcqIndex) => {
+                        const correctIndex = mcq.correctAnswerIndex;
+                        const userChoice = userAnswerArray[mcqIndex]; // This is the index (e.g., "1")
+                        let isCorrect = false;
+
+                        if (userChoice !== undefined && userChoice !== null) {
+                            isCorrect = parseInt(userChoice) === correctIndex;
+                            if (isCorrect) {
+                                correctInBlock++;
+                                correctCount++;
+                            }
+                        }
+                        
+                        // Text for Step 5
+                        const selectedText = (userChoice !== undefined && userChoice !== null) ? mcq.options[parseInt(userChoice)] : 'N/A';
+                        mcqFinalText += `  Q${mcqIndex + 1}: ${mcq.question_text}\n  Your Answer: ${selectedText}\n  Correct Answer: ${mcq.options[correctIndex]}\n  Result: ${isCorrect ? 'Correct' : 'Incorrect'}\n\n`;
+                        
+                        // MODIFIED: New feedback text for Step 4
+                        if (isCorrect) {
+                            mcqFeedbackText += `<p class="text-sm text-green-600">Q${mcqIndex + 1}: Correct!</p>`;
+                        } else if (userChoice === undefined || userChoice === null) {
+                            mcqFeedbackText += `<p class="text-sm text-yellow-600">Q${mcqIndex + 1}: Skipped. Correct was: ${mcq.options[correctIndex]}</p>`;
+                        } else {
+                            mcqFeedbackText += `<p class="text-sm text-red-600">Q${mcqIndex + 1}: Incorrect. Correct was: ${mcq.options[correctIndex]}</p>`;
+                        }
+                    });
+
+                    // Update feedback element
+                    feedbackElement.innerHTML = `
+                        <p class="font-semibold mb-2">Result: You answered ${correctInBlock} / ${totalInBlock} questions correctly.</p>
+                        ${mcqFeedbackText}
+                    `;
+                    feedbackElement.classList.add('bg-gray-100', 'text-gray-700', 'border-gray-400');
+                    feedbackElement.classList.remove('hidden');
+
+                    finalAssignmentText += `--- ${assignment.title} (Multiple Choice) ---\n${mcqFinalText}`;
+
+                // MODIFIED: New Grammar grading logic
+                } else if (type === 'GrammarPractice' && Array.isArray(assignment.correctAnswer)) {
+                    let correctInBlock = 0;
+                    const userAnswerArray = userAnswer || [];
+                    const expectedAnswerArray = assignment.correctAnswer;
+                    const totalInBlock = expectedAnswerArray.length;
+                    totalGradable += totalInBlock;
+
+                    let grammarFinalText = `Prompt: ${assignment.content.replace(/\n/g, '\n  ')}\n`;
+                    let grammarFeedbackText = ''; // Text for Step 4 feedback
+                    
+                    expectedAnswerArray.forEach((expectedAns, ansIndex) => {
+                        const userAns = (userAnswerArray[ansIndex] || "").trim().toLowerCase();
+                        const correctAns = expectedAns.trim().toLowerCase();
+                        let isCorrect = false;
+
+                        if (userAns === correctAns) {
+                            correctInBlock++;
+                            correctCount++;
+                            isCorrect = true;
+                        }
+                        
+                        grammarFinalText += `  Q${ansIndex + 1}: Your Answer: "${userAnswerArray[ansIndex] || 'N/A'}", Correct: "${expectedAns}", Result: ${isCorrect ? 'Correct' : 'Incorrect'}\n`;
+                        
+                        // New feedback text for Step 4
+                        if (isCorrect) {
+                            grammarFeedbackText += `<p class="text-sm text-green-600">Q${ansIndex + 1}: Correct!</p>`;
+                        } else if (!userAnswerArray[ansIndex]) {
+                            grammarFeedbackText += `<p class="text-sm text-yellow-600">Q${ansIndex + 1}: Skipped. Correct was: "${expectedAns}"</p>`;
+                        } else {
+                            grammarFeedbackText += `<p class="text-sm text-red-600">Q${ansIndex + 1}: Incorrect. Correct was: "${expectedAns}"</p>`;
+                        }
+                    });
+
+                    // Update feedback element
+                    feedbackElement.innerHTML = `
+                        <p class="font-semibold mb-2">Result: You answered ${correctInBlock} / ${totalInBlock} questions correctly.</p>
+                        ${grammarFeedbackText}
+                    `;
+                    feedbackElement.classList.add('bg-gray-100', 'text-gray-700', 'border-gray-400');
+                    feedbackElement.classList.remove('hidden');
+                    
+                    finalAssignmentText += `--- ${assignment.title} (Grammar) ---\n${grammarFinalText}\n`;
+
+                } else {
+                    // WritingPrompt/VocabularyWords (Ungraded)
+                    let userResponseText = '';
+                    if (type === 'VocabularyWords' && Array.isArray(userAnswer)) {
+                        userResponseText = userAnswer.filter(Boolean).join('\n');
+                    } else if (type === 'WritingPrompt') {
+                        userResponseText = userAnswer || '';
+                    }
+
+                    feedbackElement.textContent = "📝 This is a long-form assignment and is not automatically graded in this prototype. Review your response below.";
+                    feedbackElement.classList.add('bg-gray-100', 'text-gray-600', 'border-gray-400');
+                    feedbackElement.classList.remove('hidden');
+                    
+                    // Prepare final text: Include Prompt and User Response
+                    finalAssignmentText += `--- ${assignment.title} (${type}) ---\nPrompt:\n${assignment.content}\n\nUser Response:\n${userResponseText}\n\n(Ungraded)\n\n`;
+                }
+            });
+
+            // Update Grading Summary
+            const scoreDisplay = getElement('current-score');
+            scoreDisplay.textContent = `${correctCount}/${totalGradable}`;
+            getElement('grading-summary').classList.remove('hidden');
+            
+            if (totalGradable > 0) {
+                 const percentage = Math.round((correctCount / totalGradable) * 100);
+                 getElement('grading-message').textContent = `You scored ${percentage}% on the automatically graded questions. Review the detailed feedback above for each question!`;
+            } else {
+                 getElement('grading-message').textContent = `No automatically gradable questions were generated. Your score is based on questions of type Multiple Choice and Grammar Practice.`;
+            }
+
+            // Update final text for Step 5
+            getElement('final-assignment-text').textContent = finalAssignmentText;
+            showStep(5);
+        }
+
+        function submitAssignments() {
+            gradeAssignments();
+        }
+
+        function copyToClipboard(elementId) {
+            const content = getElement(elementId).textContent;
+            
+            // Use execCommand('copy') for better compatibility in iframe environments
+            const tempTextArea = document.createElement('textarea');
+            tempTextArea.value = content;
+            document.body.appendChild(tempTextArea);
+            tempTextArea.select();
+            
+            try {
+                document.execCommand('copy');
+                // Simple visual feedback instead of alert()
+                const button = event.target;
+                const originalText = button.textContent;
+                button.textContent = 'Copied!';
+                setTimeout(() => { button.textContent = originalText; }, 1500);
+            } catch (err) {
+                console.error('Failed to copy text: ', err);
+            }
+            document.body.removeChild(tempTextArea);
+        }
+
+        // =====================================================================================================
+        // INITIALIZATION
+        // =====================================================================================================
+
+        function init() {
+            renderCards();
+
+            // Set up API Key listener (Step 1)
+            const apiKeyInput = getElement('openai-api-key');
+            const nextButtonStep1 = getElement('step-1-next');
+
+            apiKeyInput.addEventListener('input', updateButtonStates);
+            nextButtonStep1.addEventListener('click', () => showStep(2));
+            
+            apiKeyInput.addEventListener('keydown', (event) => {
+                if (event.key === 'Enter') {
+                    if (!nextButtonStep1.disabled) {
+                        event.preventDefault(); 
+                        nextButtonStep1.click();
+                    }
+                }
+            });
+
+            // Set up Step 2 listeners
+            getElement('step-2-back').addEventListener('click', () => showStep(1));
+            const nextButtonStep2 = getElement('step-2-next');
+            nextButtonStep2.addEventListener('click', handleStep2Next);
+
+            const customTopicInput = getElement('custom-topic-text');
+            customTopicInput.addEventListener('input', updateButtonStates);
+            getElement('select-custom-topic-btn').addEventListener('click', handleSelectCustomTopic);
+            
+            getElement('select-random-topic-btn').addEventListener('click', handleSelectRandomTopic);
+
+            // Set up navigation button listeners
+            getElement('nav-up').addEventListener('click', () => navigateCategory('up'));
+            getElement('nav-down').addEventListener('click', () => navigateCategory('down'));
+
+            document.addEventListener('keydown', (event) => {
+                if (event.key === 'Enter' && appState.currentStep === 2) {
+                    if (document.activeElement === customTopicInput && !getElement('select-custom-topic-btn').disabled) {
+                         event.preventDefault();
+                         getElement('select-custom-topic-btn').click();
+                         return;
+                    }
+                    
+                    if (!nextButtonStep2.disabled) {
+                        event.preventDefault(); 
+                        nextButtonStep2.click();
+                    }
+                }
+            });
+
+            getElement('upload-topic-btn').addEventListener('click', () => {
+                getElement('upload-topic-input').click();
+            });
+            getElement('upload-topic-input').addEventListener('change', handleUploadTopic);
+
+            // Set up Step 3 listeners
+            const slider = getElement('cefr-slider');
+            slider.addEventListener('input', (event) => updateLevel(event.target.value));
+            getElement('description-toggle-header').addEventListener('click', toggleDescription);
+            getElement('step-3-back').addEventListener('click', () => showStep(2));
+            getElement('step-3-next-generate').addEventListener('click', startGeneration);
+
+            // Set up Step 4 listeners
+            getElement('step-4-back-to-prev').addEventListener('click', () => showStep(3));
+            getElement('submit-assignments').addEventListener('click', submitAssignments);
+
+            // Set up Step 5 listeners
+            getElement('step-5-back-to-prev').addEventListener('click', () => showStep(4));
+            getElement('step-5-back-to-start').addEventListener('click', () => {
+                location.reload();
+            });
+
+            // Set up resize listener for highlighter updates
+            window.addEventListener('resize', updateCategoryHighlighter);
+
+            // Initial state setup
+            updateLevel(slider.value); 
+            showStep(1);
+            updateButtonStates();
+        }
+
+        window.onload = init;
+    </script>
+</body>
+</html>
