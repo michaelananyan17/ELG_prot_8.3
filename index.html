@@ -930,13 +930,11 @@
         }
 
         // =====================================================================================================
-        // FIXED CATEGORY-TRACKING SYSTEM - ALL 4 ERRORS RESOLVED
+        // FIXED CATEGORY-TRACKING SYSTEM WITH SCROLLING MENU SUPPORT
         // =====================================================================================================
 
         let intersectionObserver = null;
 
-        // FIXED ERROR #1: Intersection Observer Delay Chain
-        // SOLUTION: Use immediate updates with proper coordination, no cascading delays
         function initializeCategorySystem() {
             renderCategorySidebar();
             renderTopicCategories();
@@ -945,8 +943,6 @@
             updateNavigationButtons();
         }
 
-        // FIXED ERROR #4: Highlighter Update Timing  
-        // SOLUTION: Update highlighter immediately with state changes
         function renderCategorySidebar() {
             const categoryContainer = getElement('category-list');
             if (!categoryContainer) return;
@@ -966,8 +962,6 @@
             updateCategoryHighlighter();
         }
 
-        // FIXED ERROR #3: Category Click Response Delay
-        // SOLUTION: Remove unnecessary delays, use immediate response with proper state management
         function handleCategoryClick(category) {
             appState.isScrolling = true;
             scrollToCategory(category);
@@ -975,10 +969,9 @@
             // Reset the scrolling flag after scroll completes
             setTimeout(() => {
                 appState.isScrolling = false;
-            }, 500); // Reduced from 1000ms to 500ms
+            }, 500);
         }
 
-        // FIXED: Scroll to specific category
         function scrollToCategory(category) {
             const categoryElement = getElement(`category-${category.replace(/\s+/g, '-')}`);
             if (categoryElement) {
@@ -998,7 +991,7 @@
             }
         }
 
-        // FIXED: Set active category and update UI
+        // FIXED: Set active category and update UI with menu scrolling
         function setActiveCategory(category, updateScroll = false) {
             if (appState.currentCategory === category) return;
             
@@ -1012,6 +1005,9 @@
             const activeCategoryItem = document.querySelector(`[data-category="${category}"]`);
             if (activeCategoryItem) {
                 activeCategoryItem.classList.add('active');
+                
+                // NEW: Scroll the category menu to keep the active item visible
+                scrollCategoryMenuToActive(activeCategoryItem);
             }
             
             // Update topic sections
@@ -1036,7 +1032,24 @@
             }
         }
 
-        // FIXED: Update category highlighter position
+        // NEW: Function to scroll category menu to keep active item visible
+        function scrollCategoryMenuToActive(activeItem) {
+            const categoryContainer = getElement('category-list');
+            if (!categoryContainer) return;
+            
+            const containerRect = categoryContainer.getBoundingClientRect();
+            const itemRect = activeItem.getBoundingClientRect();
+            
+            // Check if active item is outside the visible area
+            if (itemRect.top < containerRect.top) {
+                // Item is above visible area - scroll up
+                categoryContainer.scrollTop -= (containerRect.top - itemRect.top + 10);
+            } else if (itemRect.bottom > containerRect.bottom) {
+                // Item is below visible area - scroll down
+                categoryContainer.scrollTop += (itemRect.bottom - containerRect.bottom + 10);
+            }
+        }
+
         function updateCategoryHighlighter() {
             const highlighter = getElement('category-highlighter');
             const activeCategoryItem = document.querySelector('.category-item.active');
@@ -1052,8 +1065,6 @@
             }
         }
 
-        // FIXED ERROR #1: Intersection Observer Delay Chain
-        // SOLUTION: Use immediate updates with proper thresholds, no additional delays
         function initializeScrollTracking() {
             const topicsContainer = getElement('topics-scroll-container');
             if (!topicsContainer) return;
@@ -1092,7 +1103,7 @@
                 {
                     root: topicsContainer,
                     rootMargin: '-20% 0px -30% 0px',
-                    threshold: [0, 0.3, 0.6, 1] // Simplified thresholds
+                    threshold: [0, 0.3, 0.6, 1]
                 }
             );
 
@@ -1105,8 +1116,6 @@
             topicsContainer.addEventListener('scroll', handleTopicsScroll);
         }
 
-        // FIXED ERROR #2: Scroll Event Handler Overlap
-        // SOLUTION: Single coordinated system, prevent multiple competing updates
         function handleTopicsScroll() {
             // Clear any existing timeout
             if (appState.scrollTimeout) {
@@ -1119,11 +1128,9 @@
                 if (!appState.isScrolling) {
                     updateActiveCategoryFromScroll();
                 }
-            }, 100); // Reduced delay for better responsiveness
+            }, 100);
         }
 
-        // FIXED ERROR #2: Scroll Event Handler Overlap  
-        // SOLUTION: Single update path, no competing systems
         function updateActiveCategoryFromScroll() {
             const topicsContainer = getElement('topics-scroll-container');
             const categorySections = document.querySelectorAll('.topic-category');
@@ -1158,7 +1165,6 @@
             }
         }
 
-        // FIXED: Render topic categories
         function renderTopicCategories() {
             const topicsContainer = getElement('topics-scroll-container');
             if (!topicsContainer) return;
