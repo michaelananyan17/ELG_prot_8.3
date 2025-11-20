@@ -589,7 +589,10 @@
             uploadedTopic: null,
             currentCategory: 'Current Events',
             isScrolling: false,
-            scrollTimeout: null
+            scrollTimeout: null,
+            // NEW: Add delay tracking variables
+            categoryScrollDelay: null,
+            topicScrollDelay: null
         };
 
         // ==========================================================================================
@@ -930,7 +933,7 @@
         }
 
         // =====================================================================================================
-        // IMPROVED CATEGORY-TRACKING SYSTEM FROM step_2_sync_prot.html
+        // IMPROVED CATEGORY-TRACKING SYSTEM WITH DELAYS
         // =====================================================================================================
 
         let intersectionObserver = null;
@@ -964,15 +967,24 @@
             setTimeout(updateCategoryHighlighter, 100);
         }
 
-        // FIXED: Handle category clicks
+        // MODIFIED: Handle category clicks with 0.25s delay
         function handleCategoryClick(category) {
             appState.isScrolling = true;
-            scrollToCategory(category);
             
-            // Reset the scrolling flag after a delay
-            setTimeout(() => {
-                appState.isScrolling = false;
-            }, 1000);
+            // Clear any existing delay
+            if (appState.categoryScrollDelay) {
+                clearTimeout(appState.categoryScrollDelay);
+            }
+            
+            // Add 0.25s delay before scrolling
+            appState.categoryScrollDelay = setTimeout(() => {
+                scrollToCategory(category);
+                
+                // Reset the scrolling flag after a delay
+                setTimeout(() => {
+                    appState.isScrolling = false;
+                }, 1000);
+            }, 250);
         }
 
         // FIXED: Scroll to specific category
@@ -1049,7 +1061,7 @@
             }
         }
 
-        // FIXED: Initialize scroll tracking with Intersection Observer
+        // MODIFIED: Initialize scroll tracking with Intersection Observer and reduced sensitivity
         function initializeScrollTracking() {
             const topicsContainer = getElement('topics-scroll-container');
             if (!topicsContainer) return;
@@ -1059,7 +1071,7 @@
                 intersectionObserver.disconnect();
             }
 
-            // Create new observer with proper configuration
+            // Create new observer with reduced sensitivity
             intersectionObserver = new IntersectionObserver(
                 (entries) => {
                     // Only update if not programmatically scrolling
@@ -1076,18 +1088,26 @@
                         }
                     });
 
-                    // Update active category if we found a visible one
-                    if (mostVisibleEntry && highestRatio > 0.1) {
+                    // Update active category if we found a visible one with higher threshold
+                    if (mostVisibleEntry && highestRatio > 0.3) { // Increased threshold from 0.1 to 0.3
                         const categoryId = mostVisibleEntry.target.id.replace('category-', '').replace(/-/g, ' ');
                         if (categoryId !== appState.currentCategory) {
-                            setActiveCategory(categoryId, false);
+                            // Clear any existing delay
+                            if (appState.topicScrollDelay) {
+                                clearTimeout(appState.topicScrollDelay);
+                            }
+                            
+                            // Add 0.25s delay before updating category
+                            appState.topicScrollDelay = setTimeout(() => {
+                                setActiveCategory(categoryId, false);
+                            }, 250);
                         }
                     }
                 },
                 {
                     root: topicsContainer,
-                    rootMargin: '-10% 0px -40% 0px', // Adjusted margins for better tracking
-                    threshold: [0, 0.1, 0.3, 0.5, 0.7, 1]
+                    rootMargin: '-20% 0px -30% 0px', // Reduced sensitivity by increasing margins
+                    threshold: [0, 0.2, 0.4, 0.6, 0.8, 1] // Higher thresholds for less sensitivity
                 }
             );
 
@@ -1100,23 +1120,23 @@
             topicsContainer.addEventListener('scroll', handleTopicsScroll);
         }
 
-        // Handle scroll events on topics container
+        // MODIFIED: Handle scroll events on topics container with reduced sensitivity
         function handleTopicsScroll() {
             // Clear any existing timeout
             if (appState.scrollTimeout) {
                 clearTimeout(appState.scrollTimeout);
             }
             
-            // Set a new timeout to detect when scrolling stops
+            // Set a new timeout to detect when scrolling stops (increased delay for less sensitivity)
             appState.scrollTimeout = setTimeout(() => {
                 // If not programmatically scrolling, update active category based on scroll position
                 if (!appState.isScrolling) {
                     updateActiveCategoryFromScroll();
                 }
-            }, 150);
+            }, 300); // Increased from 150ms to 300ms for less sensitivity
         }
 
-        // Update active category based on scroll position
+        // MODIFIED: Update active category based on scroll position with reduced sensitivity
         function updateActiveCategoryFromScroll() {
             const topicsContainer = getElement('topics-scroll-container');
             const categorySections = document.querySelectorAll('.topic-category');
@@ -1141,11 +1161,19 @@
                 }
             });
             
-            // Update active category if we found a section
-            if (closestSection) {
+            // Update active category if we found a section and it's significantly closer
+            if (closestSection && closestDistance < 200) { // Added distance threshold
                 const categoryId = closestSection.id.replace('category-', '').replace(/-/g, ' ');
                 if (categoryId !== appState.currentCategory) {
-                    setActiveCategory(categoryId, false);
+                    // Clear any existing delay
+                    if (appState.topicScrollDelay) {
+                        clearTimeout(appState.topicScrollDelay);
+                    }
+                    
+                    // Add 0.25s delay before updating category
+                    appState.topicScrollDelay = setTimeout(() => {
+                        setActiveCategory(categoryId, false);
+                    }, 250);
                 }
             }
         }
@@ -1183,7 +1211,7 @@
         }
 
         // =====================================================================================================
-        // REMAINING FUNCTIONS FOR STEPS 3-5
+        // REMAINING FUNCTIONS FOR STEPS 3-5 (UNCHANGED)
         // =====================================================================================================
 
         // Function to render all cards (for Step 3)
